@@ -1,15 +1,14 @@
-import datetime
+import os
 from collections import defaultdict
+from dotenv import load_dotenv
+import datetime
 import numpy as np
 import requests
 import matplotlib.pyplot as plt
 
-# Параметры подключения к JIRA
-JIRA_URL = 'https://issues.apache.org/jira/rest/api/2/search'
-
 
 def make_request(payload):
-    response = requests.get(JIRA_URL, params=payload)
+    response = requests.get(os.getenv('JIRA_URL'), params=payload)
     return response.json()['issues']
 
 
@@ -26,17 +25,17 @@ def task_1(issues):
     plt.ylabel('Количество заявок')
     plt.title('1. Потраченное время на решение задачи')
     plt.show()
+    if os.getenv('ZOOM', 'false').lower() == "true":
+        count = len(issues)
+        times.sort()
+        middle_index = int(count / 1.4)
+        first_part = times[:middle_index]
 
-    count = len(issues)
-    times.sort()
-    middle_index = int(count / 1.4)
-    first_part = times[:middle_index]
-
-    plt.hist(first_part, bins=40, edgecolor='black')
-    plt.xlabel('Количество дней в открытом состоянии')
-    plt.ylabel('Количество заявок')
-    plt.title('1. Потраченное время на решение задачи')
-    plt.show()
+        plt.hist(first_part, bins=40, edgecolor='black')
+        plt.xlabel('Количество дней в открытом состоянии')
+        plt.ylabel('Количество заявок')
+        plt.title('1. Потраченное время на решение задачи')
+        plt.show()
 
 
 def get_status_times(issue):
@@ -91,14 +90,15 @@ def task_2(issues):
         plt.title(f'Распределение времени в состоянии {status}')
         plt.show()
 
-        times_filtered = [t for t in times if t <= 60]
-        bins = np.linspace(0, 60, 41)
+        if os.getenv('ZOOM', 'false').lower() == "true":
+            times_filtered = [t for t in times if t <= 60]
+            bins = np.linspace(0, 60, 41)
 
-        plt.hist(times_filtered, bins=bins, edgecolor='black')
-        plt.xlabel('Количество дней')
-        plt.ylabel('Количество задач')
-        plt.title(f'Распределение времени в состоянии {status} на меньшем интервале')
-        plt.show()
+            plt.hist(times_filtered, bins=bins, edgecolor='black')
+            plt.xlabel('Количество дней')
+            plt.ylabel('Количество задач')
+            plt.title(f'Распределение времени в состоянии {status} на меньшем интервале')
+            plt.show()
 
 
 def task_3(issues):
@@ -155,27 +155,29 @@ def task_3(issues):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     choice = input("Выберите номер задачи (1, 2 или 3): ")
 
-    if choice == '1':
-        data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
-                             'expand': 'changelog',
-                             'fields': 'created,resolutiondate'})
-        task_1(data)
+    match choice:
+        case "1":
+            data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
+                        'expand': 'changelog',
+                        'fields': 'created,resolutiondate'})
+            task_1(data)
 
-    elif choice == '2':
-        data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
-                             'expand': 'changelog',
-                             'fields': 'created,resolutiondate'})
-        task_2(data)
+        case "2":
+            data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
+                                 'expand': 'changelog',
+                                 'fields': 'created,resolutiondate'})
+            task_2(data)
 
-    elif choice == '3':
-        data = make_request(
-            {'jql': 'project=KAFKA AND status in (Open, Closed) AND created >= -90d AND text ~ "created"',
-             'maxResults': '1000',
-             'expand': 'changelog',
-             'fields': 'created,resolutiondate'})
-        task_3(data)
+        case "3":
+            data = make_request(
+                {'jql': 'project=KAFKA AND status in (Open, Closed) AND created >= -90d AND text ~ "created"',
+                 'maxResults': '1000',
+                 'expand': 'changelog',
+                 'fields': 'created,resolutiondate'})
+            task_3(data)
 
-    else:
-        print("Неверный выбор задачи. Пожалуйста, выберите 1, 2 или 3.")
+        case _:
+            print("Неверный выбор задачи. Пожалуйста, выберите 1, 2 или 3.")
