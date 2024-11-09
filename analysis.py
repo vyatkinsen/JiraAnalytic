@@ -161,8 +161,8 @@ if __name__ == "__main__":
     match choice:
         case "1":
             data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
-                        'expand': 'changelog',
-                        'fields': 'created,resolutiondate'})
+                                 'expand': 'changelog',
+                                 'fields': 'created,resolutiondate'})
             task_1(data)
 
         case "2":
@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
         case "3":
             data = make_request(
-                {'jql': 'project=KAFKA AND status in (Open, Closed) AND created >= -90d AND text ~ "created"',
+                {'jql': 'project=KAFKA AND status in (Open, Resolved) AND created >= -90d AND text ~ "created"',
                  'maxResults': '1000',
                  'expand': 'changelog',
                  'fields': 'created,resolutiondate'})
