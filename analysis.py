@@ -154,30 +154,72 @@ def task_3(issues):
     plt.show()
 
 
+def task_4(issues):
+    user_task_count = defaultdict(int)
+
+    for issue in issues:
+        assignee = issue['fields'].get('assignee')
+        reporter = issue['fields'].get('reporter')
+        if assignee is not None:
+            assignee_name = assignee.get('displayName')
+            user_task_count[assignee_name] += 1
+
+        if reporter is not None:
+            reporter_name = reporter.get('displayName')
+            user_task_count[reporter_name] += 1
+
+    sorted_users = sorted(user_task_count.items(), key=lambda x: x[1], reverse=True)[:30]
+    users, task_counts = zip(*sorted_users)
+
+    plt.figure(figsize=(12, 8))
+    plt.barh(users, task_counts, color='skyblue')
+    plt.xlabel('Количество задач')
+    plt.ylabel('Имя пользователя')
+    plt.title('Топ-30 пользователей по количеству задач (исполнитель или репортер)')
+    plt.gca().invert_yaxis()
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     load_dotenv()
-    choice = input("Выберите номер задачи (1, 2 или 3): ")
+    is_running = True
 
-    match choice:
-        case "1":
-            data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
-                                 'expand': 'changelog',
-                                 'fields': 'created,resolutiondate'})
-            task_1(data)
+    while is_running:
+        choice = input("Выберите номер задачи (1, 2, 3, 4, 5 или 6): ")
 
-        case "2":
-            data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
-                                 'expand': 'changelog',
-                                 'fields': 'created,resolutiondate'})
-            task_2(data)
+        match choice:
+            case "1":
+                data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
+                                     'expand': 'changelog',
+                                     'fields': 'created,resolutiondate'})
+                task_1(data)
 
-        case "3":
-            data = make_request(
-                {'jql': 'project=KAFKA AND status in (Open, Resolved) AND created >= -90d AND text ~ "created"',
-                 'maxResults': '1000',
-                 'expand': 'changelog',
-                 'fields': 'created,resolutiondate'})
-            task_3(data)
+            case "2":
+                data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
+                                     'expand': 'changelog',
+                                     'fields': 'created,resolutiondate'})
+                task_2(data)
 
-        case _:
-            print("Неверный выбор задачи. Пожалуйста, выберите 1, 2 или 3.")
+            case "3":
+                data = make_request(
+                    {'jql': 'project=KAFKA AND status in (Open, Resolved) AND created >= -90d AND text ~ "created"',
+                     'maxResults': '1000',
+                     'expand': 'changelog',
+                     'fields': 'created,resolutiondate'})
+                task_3(data)
+
+            case "4":
+                data = make_request(
+                    {'jql': 'project=KAFKA AND (assignee IS NOT EMPTY OR reporter IS NOT EMPTY)', 'maxResults': '1000',
+                     'fields': 'assignee,reporter'})
+                task_4(data)
+
+            case "5":
+                pass
+
+            case "6":
+                pass
+
+            case _:
+                print("Неверный выбор задачи. Пожалуйста, выберите 1, 2, 3, 4, 5 или 6.")
