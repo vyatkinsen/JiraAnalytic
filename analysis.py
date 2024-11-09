@@ -1,7 +1,8 @@
+import datetime
+from collections import defaultdict
 import numpy as np
 import requests
 import matplotlib.pyplot as plt
-import datetime
 
 # Параметры подключения к JIRA
 JIRA_URL = 'https://issues.apache.org/jira/rest/api/2/search'
@@ -62,7 +63,6 @@ def get_status_times(issue):
                 previous_status = current_status
                 previous_time = current_time
 
-    # Добавляем время нахождения задачи в последнем состоянии до момента закрытия
     resolved_time = datetime.datetime.strptime(issue['fields']['resolutiondate'], '%Y-%m-%dT%H:%M:%S.%f%z')
     time_spent = (resolved_time - previous_time).days
     if previous_status in status_times:
@@ -84,9 +84,7 @@ def task_2(issues):
             else:
                 status_data[status] = [time_spent]
 
-    # Строим диаграммы для каждого состояния
     for status, times in status_data.items():
-        # Строим гистограмму
         plt.hist(times, bins=40, edgecolor='black')
         plt.xlabel('Количество дней')
         plt.ylabel('Количество задач')
@@ -94,11 +92,8 @@ def task_2(issues):
         plt.show()
 
         times_filtered = [t for t in times if t <= 60]
+        bins = np.linspace(0, 60, 41)
 
-        # Определяем границы бинов с одинаковыми интервалами на промежутке от 0 до 60 дней
-        bins = np.linspace(0, 60, 41)  # 40 бинов на интервале 0-60
-
-        # Строим гистограмму
         plt.hist(times_filtered, bins=bins, edgecolor='black')
         plt.xlabel('Количество дней')
         plt.ylabel('Количество задач')
@@ -106,10 +101,81 @@ def task_2(issues):
         plt.show()
 
 
-if __name__ == "__main__":
-    data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
-                         'expand': 'changelog',
-                         'fields': 'created,resolutiondate'})
-    task_1(data)
-    task_2(data)
+def task_3(issues):
+    created_dates = defaultdict(int)
+    closed_dates = defaultdict(int)
 
+    for issue in issues:
+        created_date = datetime.datetime.strptime(issue['fields']['created'], '%Y-%m-%dT%H:%M:%S.%f%z').date()
+        created_dates[created_date] += 1
+
+        if issue['fields']['resolutiondate']:
+            closed_date = datetime.datetime.strptime(issue['fields']['resolutiondate'], '%Y-%m-%dT%H:%M:%S.%f%z').date()
+            closed_dates[closed_date] += 1
+
+    min_date = min(created_dates.keys() | closed_dates.keys())
+    max_date = max(created_dates.keys() | closed_dates.keys())
+
+    all_dates = [min_date + datetime.timedelta(days=x) for x in range((max_date - min_date).days + 1)]
+
+    created_count = []
+    closed_count = []
+    cumulative_created = 0
+    cumulative_closed = 0
+    cumulative_created_list = []
+    cumulative_closed_list = []
+
+    for date in all_dates:
+        cumulative_created += created_dates.get(date, 0)
+        cumulative_closed += closed_dates.get(date, 0)
+
+        created_count.append(created_dates.get(date, 0))
+        closed_count.append(closed_dates.get(date, 0))
+        cumulative_created_list.append(cumulative_created)
+        cumulative_closed_list.append(cumulative_closed)
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(all_dates, created_count, label='Количество заведенных задач (в день)', color='blue')
+    plt.plot(all_dates, closed_count, label='Количество закрытых задач (в день)', color='green')
+    plt.plot(all_dates, cumulative_created_list, label='Накопительный итог заведенных задач', color='blue',
+             linestyle='dashed')
+    plt.plot(all_dates, cumulative_closed_list, label='Накопительный итог закрытых задач', color='green',
+             linestyle='dashed')
+
+    plt.xlabel('Дата')
+    plt.ylabel('Количество задач')
+    plt.title('График заведенных и закрытых задач с накопительным итогом')
+    plt.legend()
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    plt.show()
+
+
+if __name__ == "__main__":
+    choice = input("Выберите номер задачи (1, 2 или 3): ")
+
+    if choice == '1':
+        data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
+                             'expand': 'changelog',
+                             'fields': 'created,resolutiondate'})
+        task_1(data)
+
+    elif choice == '2':
+        data = make_request({'jql': 'project=KAFKA AND status=Closed ORDER BY createdDate', 'maxResults': '1000',
+                             'expand': 'changelog',
+                             'fields': 'created,resolutiondate'})
+        task_2(data)
+
+    elif choice == '3':
+        data = make_request(
+            {'jql': 'project=KAFKA AND status in (Open, Closed) AND created >= -90d AND text ~ "created"',
+             'maxResults': '1000',
+             'expand': 'changelog',
+             'fields': 'created,resolutiondate'})
+        task_3(data)
+
+    else:
+        print("Неверный выбор задачи. Пожалуйста, выберите 1, 2 или 3.")
