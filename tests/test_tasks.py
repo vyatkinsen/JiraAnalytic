@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from jira_lab.tasks import *
+from Jira_Analytic.tasks import *
 
 
 class TestTaskFunctions(unittest.TestCase):
