@@ -181,12 +181,47 @@ def task_4(issues):
     plt.show()
 
 
+def get_assignee_time(issue, assignee_name):
+    created_time = datetime.datetime.strptime(issue['fields']['created'], '%Y-%m-%dT%H:%M:%S.%f%z')
+    changelog = issue.get('changelog', {}).get('histories', [])
+
+    for history in changelog:
+        for item in history['items']:
+            if item['field'] == 'assignee' and item['toString'] == assignee_name:
+                assignee_set_time = datetime.datetime.strptime(history['created'], '%Y-%m-%dT%H:%M:%S.%f%z')
+                return assignee_set_time
+
+    return created_time
+
+
+def task_5(issues, assignee_name):
+    time_data = defaultdict(int)
+
+    for issue in issues:
+        if issue['fields']['resolutiondate']:
+            assignee_time = get_assignee_time(issue, assignee_name)
+            closed_time = datetime.datetime.strptime(issue['fields']['resolutiondate'], '%Y-%m-%dT%H:%M:%S.%f%z')
+
+            time_spent_days = (closed_time - assignee_time).days
+            time_data[time_spent_days] += 1
+
+    times = list(time_data.keys())
+    task_counts = list(time_data.values())
+
+    plt.bar(times, task_counts, color='skyblue')
+    plt.xlabel('Затраченное время на выполнение задачи (дни)')
+    plt.ylabel('Количество задач')
+    plt.title('Гистограмма времени выполнения задач')
+    plt.grid(axis='y', linestyle='--')
+    plt.show()
+
+
 if __name__ == "__main__":
     load_dotenv()
     is_running = True
 
     while is_running:
-        choice = input("Выберите номер задачи (1, 2, 3, 4, 5 или 6): ")
+        choice = input("Выберите номер задачи (1, 2, 3, 4, 5 или 6, 0 - для выхода): ")
 
         match choice:
             case "1":
@@ -216,10 +251,21 @@ if __name__ == "__main__":
                 task_4(data)
 
             case "5":
+                username = input("\nВведите имя пользователя: ")
+                data = make_request({
+                    'jql': f'project=KAFKA AND status=Closed AND assignee={username}',
+                    'maxResults': '1000',
+                    'fields': 'created,resolutiondate',
+                    'expand': 'changelog'
+                })
+                task_5(data, username)
                 pass
 
             case "6":
                 pass
+
+            case "0":
+                exit(0)
 
             case _:
                 print("Неверный выбор задачи. Пожалуйста, выберите 1, 2, 3, 4, 5 или 6.")
