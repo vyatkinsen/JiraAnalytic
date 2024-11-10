@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from collections import defaultdict
-from utils import get_assignee_time, get_status_times
+from utils.utils import get_assignee_time, get_status_times
 
 
 def task_1(issues):

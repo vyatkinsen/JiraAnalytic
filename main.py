@@ -1,5 +1,5 @@
-from jira_utils import make_request
-from tasks import *
+from utils.jira_utils import make_request
+from jira_lab.tasks import *
 
 
 def main():
