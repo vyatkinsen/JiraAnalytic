@@ -216,12 +216,31 @@ def task_5(issues, assignee_name):
     plt.show()
 
 
+def task_6(issues):
+    severity_data = defaultdict(int)
+
+    for issue in issues:
+        severity = issue['fields'].get('priority', {}).get('name')
+        if severity:
+            severity_data[severity] += 1
+
+    severities = list(severity_data.keys())
+    counts = list(severity_data.values())
+
+    plt.bar(severities, counts, color='salmon', edgecolor='black')
+    plt.xlabel('Степень серьёзности')
+    plt.ylabel('Количество задач')
+    plt.title('Распределение задач по степени серьезности')
+    plt.grid(axis='y', linestyle='--')
+    plt.show()
+
+
 if __name__ == "__main__":
     load_dotenv()
     is_running = True
 
     while is_running:
-        choice = input("Выберите номер задачи (1, 2, 3, 4, 5 или 6, 0 - для выхода): ")
+        choice = input("Выберите номер задачи (1 – 6 или 0 для выхода): ")
 
         match choice:
             case "1":
@@ -262,7 +281,12 @@ if __name__ == "__main__":
                 pass
 
             case "6":
-                pass
+                data = make_request({
+                    'jql': 'project=KAFKA AND status=Closed',
+                    'maxResults': '1000',
+                    'fields': 'priority'
+                })
+                task_6(data)
 
             case "0":
                 exit(0)
