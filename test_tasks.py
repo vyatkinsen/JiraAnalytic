@@ -44,7 +44,6 @@ class TestTaskFunctions(unittest.TestCase):
         # Проверяем, что функция не выдала ошибку при построении графика
         self.assertTrue(ax.has_data())
 
-
     @patch("matplotlib.pyplot.hist")
     @patch("tasks.get_status_times")
     def test_task_2(self, mock_get_status_times, mock_hist):
