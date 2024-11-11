@@ -19,7 +19,7 @@
 1. Клонируйте репозиторий:
 
    ```bash
-   git clone <url-репозитория>
+   git clone https://github.com/vyatkinsen/Jira_Analytic.git
    cd Jira_Analytic
    ```
 
