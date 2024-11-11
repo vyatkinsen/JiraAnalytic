@@ -1,0 +1,8 @@
+include LICENSE
+include readme.md
+include requirements.txt
+include install.sh
+include main.py
+include utils/*
+include tests/*
+include Jira_Analytic/*
