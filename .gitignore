@@ -1,2 +1,4 @@
 .idea/
-venv/
+.venv/
+JiraAnalytic.egg-info/
+build/
